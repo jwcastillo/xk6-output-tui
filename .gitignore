@@ -1,0 +1,8 @@
+# Build artifacts
+/k6
+/k6-tui
+*.test
+
+# Go
+*.o
+*.a

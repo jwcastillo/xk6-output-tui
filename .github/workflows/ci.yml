@@ -1,0 +1,62 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go: ["1.26.x"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with:
+          go-version: ${{ matrix.go }}
+          check-latest: true
+          cache: false
+      - name: Build
+        run: go build ./...
+      - name: Test
+        run: go test -race -timeout 120s ./...
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with:
+          go-version: "1.26.x"
+          cache: false
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: v2.10.1
+
+  xk6-build:
+    name: xk6 Build + Smoke
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with:
+          go-version: "1.26.x"
+          check-latest: true
+          cache: false
+      - name: Install xk6
+        run: go install go.k6.io/xk6/cmd/xk6@v1.4.6
+      - name: Build custom k6 with TUI extension
+        run: |
+          xk6 build \
+            --with github.com/jwcastillo/xk6-output-tui=. \
+            --output ./k6-tui
+      - name: Smoke - k6 version
+        run: ./k6-tui version
+      - name: Smoke - non-TTY run with --out tui
+        run: ./k6-tui run --quiet --out tui testdata/smoke.js

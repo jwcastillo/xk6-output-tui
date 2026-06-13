@@ -22,6 +22,8 @@ type fallbackOutput struct {
 }
 
 // NewFallback constructs a fallbackOutput. Call Start() to begin periodic logging.
+//
+//nolint:revive // type intentionally unexported; constructor exported for the _test package
 func NewFallback(logger logrus.FieldLogger) *fallbackOutput {
 	return &fallbackOutput{
 		logger: logger,

@@ -28,12 +28,12 @@ func TestFallbackFormat(t *testing.T) {
 	logger, buf := captureLogger()
 
 	snap := outputtui.Snapshot{
-		CurrentVUs:  42,
-		TotalReqs:   100,
-		InstantRPS:  50.0,
-		P95:         175.3,
-		ErrorRate:   0.05,
-		Elapsed:     10 * time.Second,
+		CurrentVUs: 42,
+		TotalReqs:  100,
+		InstantRPS: 50.0,
+		P95:        175.3,
+		ErrorRate:  0.05,
+		Elapsed:    10 * time.Second,
 	}
 
 	fb := outputtui.NewFallback(logger)

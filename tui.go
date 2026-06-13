@@ -36,6 +36,8 @@ type TUIModelInterface interface {
 }
 
 // NewTUIModel returns a new tuiModel ready for use with tea.NewProgram.
+//
+//nolint:revive // type intentionally unexported; constructor exported for the _test package
 func NewTUIModel() tuiModel {
 	return tuiModel{started: time.Now()}
 }

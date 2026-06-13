@@ -22,12 +22,12 @@ func init() {
 // It embeds output.SampleBuffer so k6 can call AddMetricSamples non-blockingly.
 type Output struct {
 	output.SampleBuffer // embedded: AddMetricSamples promoted, handles buffering
-	params   output.Params
-	flusher  *output.PeriodicFlusher
-	agg      *Aggregator
-	fallback *fallbackOutput
-	program  *tea.Program
-	done     chan struct{} // closed when bubbletea program.Run() returns
+	params              output.Params
+	flusher             *output.PeriodicFlusher
+	agg                 *Aggregator
+	fallback            *fallbackOutput
+	program             *tea.Program
+	done                chan struct{} // closed when bubbletea program.Run() returns
 }
 
 // New constructs the Output extension. Called by k6 after xk6 build.
@@ -49,7 +49,7 @@ func (o *Output) Description() string {
 // io.Writer with no Fd() method; os.Stderr is the real file descriptor.
 func (o *Output) Start() error {
 	// D-11: TTY detection on os.Stderr (not params.StdErr which is io.Writer).
-	isTTY := term.IsTerminal(int(os.Stderr.Fd()))
+	isTTY := term.IsTerminal(int(os.Stderr.Fd())) //nolint:gosec // stderr fd is a small value; no overflow
 
 	// Start the PeriodicFlusher at 100ms (D-03).
 	var err error
@@ -65,15 +65,15 @@ func (o *Output) Start() error {
 		o.done = make(chan struct{})
 		o.program = tea.NewProgram(
 			NewTUIModel(),
-			tea.WithOutput(os.Stderr),        // D-08: render to stderr
-			tea.WithInputTTY(),               // opens /dev/tty for input
-			tea.WithAltScreen(),              // D-08: alternate screen buffer
-			tea.WithoutSignalHandler(),       // k6 owns signals (D-06)
+			tea.WithOutput(os.Stderr),  // D-08: render to stderr
+			tea.WithInputTTY(),         // opens /dev/tty for input
+			tea.WithAltScreen(),        // D-08: alternate screen buffer
+			tea.WithoutSignalHandler(), // k6 owns signals (D-06)
 		)
 		go func() {
 			// program.Run() blocks until Quit()/Kill() — never block Start (D-06).
 			defer close(o.done)
-			o.program.Run() //nolint:errcheck // terminal restore errors are non-fatal
+			o.program.Run() //nolint:errcheck,gosec // terminal restore errors are non-fatal
 		}()
 	} else {
 		// D-11: non-TTY fallback — print plain-text stats lines every 5s.

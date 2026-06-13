@@ -3,6 +3,7 @@ package outputtui
 import (
 	"math"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -70,9 +71,9 @@ func TestHistogram_MinMax(t *testing.T) {
 // without panicking.
 func TestHistogram_Clamp(t *testing.T) {
 	h := NewHistogram()
-	h.Add(-1.0)      // below min → clamped to 0.001
-	h.Add(200000.0)  // above max → clamped to 120000
-	h.Add(0.0)       // zero → clamped to 0.001
+	h.Add(-1.0)     // below min → clamped to 0.001
+	h.Add(200000.0) // above max → clamped to 120000
+	h.Add(0.0)      // zero → clamped to 0.001
 
 	require.EqualValues(t, 3, h.count, "all three samples should be counted despite clamping")
 }
@@ -131,13 +132,17 @@ func BenchmarkIngest(b *testing.B) {
 	}
 }
 
-// BenchmarkIngest_Timing runs exactly once and asserts wall-time < 50ms.
-func BenchmarkIngest_Timing(b *testing.B) {
+// TestIngestBudget ingests 100k samples once and asserts wall-time < 50ms (TUI-06 budget).
+func TestIngestBudget(t *testing.T) {
+	t.Parallel()
 	const sampleCount = 100_000
 	containers := makeFakeHTTPDurationContainers(sampleCount)
 
-	b.ResetTimer()
-	b.N = 1
 	agg := NewAggregator()
+	start := time.Now()
 	agg.Ingest(containers)
+	elapsed := time.Since(start)
+	if elapsed > 50*time.Millisecond {
+		t.Fatalf("Ingest of %d samples took %v, budget is 50ms", sampleCount, elapsed)
+	}
 }

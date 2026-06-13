@@ -132,8 +132,8 @@ func (a *Aggregator) Ingest(containers []metrics.SampleContainer) {
 				a.totalReqs++
 				a.ring.add(s.Time, 1)
 				// Guard for Pitfall 6: status tag may be absent on non-HTTP samples.
-				if s.TimeSeries.Tags != nil {
-					if code, ok := s.TimeSeries.Tags.Get("status"); ok {
+				if s.Tags != nil {
+					if code, ok := s.Tags.Get("status"); ok {
 						a.statusCodes[code]++
 					}
 				}

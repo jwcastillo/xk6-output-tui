@@ -11,34 +11,6 @@ import (
 
 // --- helpers ---
 
-// makeSample builds a metrics.Sample with the given metric name and value.
-// Tags are passed as alternating key/value pairs.
-func makeSample(registry *metrics.Registry, name string, value float64, tagKV ...string) metrics.Sample {
-	m, err := registry.NewMetric(name, metrics.Counter)
-	if err != nil {
-		// Metric may already be registered; fetch it.
-		m = registry.Get(name)
-	}
-	ts := metrics.TimeSeries{Metric: m}
-	if len(tagKV) > 0 {
-		tagMap := make(map[string]string, len(tagKV)/2)
-		for i := 0; i+1 < len(tagKV); i += 2 {
-			tagMap[tagKV[i]] = tagKV[i+1]
-		}
-		ts.Tags = registry.RootTagSet().WithTagsFromMap(tagMap)
-	}
-	return metrics.Sample{
-		TimeSeries: ts,
-		Time:       time.Now(),
-		Value:      value,
-	}
-}
-
-// makeContainer wraps a single Sample into a SampleContainer.
-func makeContainer(s metrics.Sample) metrics.SampleContainer {
-	return metrics.Samples{s}
-}
-
 // makeFakeHTTPDurationContainers returns n SampleContainers each holding one
 // http_req_duration sample. Used by benchmarks.
 func makeFakeHTTPDurationContainers(n int) []metrics.SampleContainer {
